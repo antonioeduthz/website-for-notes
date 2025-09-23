@@ -109,7 +109,7 @@ textarea {
     border-radius: 10px;
     transition: scale 150ms;
 }
-.hide-display {
+.hide {
     scale: 0;
 }
 

@@ -19,6 +19,7 @@ $(function() {
         updateNoteList()
     })
 
+    //Deleta uma nota que escolher
     $("#delete-btn").on("click", () => {
         if (isNoteOn) {
             notes.splice(currentNote,1)
@@ -28,12 +29,13 @@ $(function() {
         updateNoteList()
     })
 
+    //Abre a interface para adicionar uma nova nota
     $("#add-btn").on("click", () => {
         $("#display").toggleClass("hide-display")
         isNoteOn = false
     })
 
-    //
+    //Atualiza a vizualização das notas disponiveis e se clicar abre a nota para a pessoa ler e editar o arquivo    
     function updateNoteList() {
         const template = document.querySelector("#note-template")
         const $wrapper = $('<div/>')
@@ -60,6 +62,5 @@ $(function() {
         });
         $("#note-main").append($wrapper.children())
     }
-
     updateNoteList()
 })
