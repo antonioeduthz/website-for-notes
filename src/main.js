@@ -1,115 +1,91 @@
-const notes = JSON.parse(localStorage.getItem("notes") || "[]")
+$(function() {
+    const notes = JSON.parse(localStorage.getItem("notes") || "[]")
+    const template = document.querySelector("#note-template")
+    let noteRead = false
+    let currentNote = 0
+
+    //Botão para abrir uma nova anotação
+    $("#add-btn").on("click", () => {
+        $("#display").toggleClass("hide")
+        clearDisplay()
+        noteRead = false
+
+    })
+
+    $("#save-btn").on("click", saveData)
+
+    $("#delete-btn").on("click", deleteData)
 
 
-//Elementos do display
-const display = document.querySelector("#display");
-const noteTitle = document.querySelector("#note-title");
-const noteContent = document.querySelector("#note-content");
-const saveButton = document.querySelector("#save-btn");
-const deleteButton = document.querySelector("#delete-btn");
-let isDisplayOn = false;
-let isNoteOn = false;
-let noteIndex;
 
-//Misc
-const main = document.querySelector("main");
-const template = document.getElementById("note-template")
-const addButton = document.querySelector("#add-btn");
-const noteMain = document.getElementById("note-main");
-
-//funções para salvar, atualizar e deletar
-function SaveData(title, content)
-{
-    notes.push([title,content]);
-    updateNotes();
-    localStorage.setItem("notes",JSON.stringify(notes));
-}
-function updateData()
-{
-    notes[noteIndex][0] = noteTitle.value;
-    notes[noteIndex][1] = noteContent.value;
-    updateNotes();
-    localStorage.setItem("notes",JSON.stringify(notes));
-}
-function deleteData()
-{
-    notes.splice(noteIndex,1);
-    updateNotes();
-    localStorage.setItem("notes",JSON.stringify(notes));    
-}
-
-//Atualiza a lista de notas 
-function updateNotes()
-{
-    noteMain.innerHTML = "";
-    notes.forEach((element,index) => {
-        let clone = template.content.cloneNode(true);
-        const previewNote = clone.querySelector(".note-preview")
-        const fade = clone.querySelector(".fade");
-        previewNote.setAttribute("id", index);
-        clone.querySelector(".title-preview").textContent = element[0];
-        clone.querySelector(".p-preview").textContent = element[1];
-        previewNote.addEventListener('click', () => {
-            noteTitle.value = element[0];
-            noteContent.value = element[1];
-            deleteButton.textContent = "Delete";
-            display.style.scale = 1;
-            isDisplayOn = true;
-            isNoteOn = true;
-            noteIndex = previewNote.id;
-        });
-        noteMain.append(clone);
-        if (previewNote.scrollHeight < 250) {
-            fade.style.scale = 0;
+    function validateData(title, content) {
+        if(title.trim() !== "" || content.trim() !== ""){
+            return {title,content,check: true}
         }
-    });
-}
-
-//Limpa o display da nota
-function clearDisplay()
-{
-    noteTitle.value = "";
-    noteContent.value = "";
-}
-
-//Abre o display para criar notas
-addButton.addEventListener('click', () => {
-    if (!isDisplayOn) {
-        display.style.scale = 1;
-        isDisplayOn = true;
-    } else {
-        display.style.scale = 0;
-        isDisplayOn = false;
-        isNoteOn = false;
+        else return{check: false}
     }
-    deleteButton.textContent = "Close";
-    clearDisplay();
-});
 
-//Salva notas
-saveButton.addEventListener('click', () => {
-    const title = noteTitle.value;
-    const content = noteContent.value;
-    if (isNoteOn) {
-        updateData()
+    function saveData() {
+        const title = $("#display-title").val()
+        const content = $("#display-content").val()
+        console.log(title)
+        const data = validateData(title,content)
+        if (noteRead === false && data.check) {
+            notes.push(data)
+        } else if(data.check){
+            notes[currentNote].title = data.title
+            notes[currentNote].content = data.content
+        }
+        $("#display").toggleClass("hide")
+        localStorage.setItem("notes",JSON.stringify(notes))
+        updateNoteList()
+        noteRead = false
     }
-    else {
-        SaveData(title, content); 
-    }
-    display.style.scale = 0;
-    deleteButton.textContent = "Close";
-    isDisplayOn = false;
-    isNoteOn = false;
-    clearDisplay();
-});
 
-//Deleta a nota ou fecha o display(caso for criar uma nota)
-deleteButton.addEventListener('click', () => {
-    if (isNoteOn) {
-        deleteData();
+    function deleteData() {
+        if (noteRead === true) {
+            notes.splice(currentNote,1)
+            localStorage.setItem("notes",JSON.stringify(notes))
+            $("#display").toggleClass("hide")
+            updateNoteList()            
+        }
+        noteRead = false
     }
-    display.style.scale = 0;
-    isDisplayOn = false;
-    isNoteOn = false;
-    clearDisplay();
-});
+
+    function clearDisplay() {
+        const $display = $("#display")
+        $display.find("#display-title").val('')
+        $display.find("#display-content").val('')
+    }
+
+    function updateNoteList() {
+        const $wrapper = $('<div/>')
+
+        $("#note-main").empty()
+        clearDisplay()
+        
+        notes.forEach((element, index) => {
+            console.log(element)
+            const clone = template.content.cloneNode(true)
+            const $note = $(clone).find(".note")
+
+            $note.find(".note-title").text(element.title)
+            $note.find(".note-content").text(element.content)
+            $note.attr("id", index)
+
+            $note.on("click", function() {
+                const $display = $("#display")
+
+                $display.toggleClass("hide")
+                $display.find("#display-title").val(element.title)
+                $display.find("#display-content").val(element.content)
+                currentNote = $(this).attr("id")
+                noteRead = true
+            })
+            $wrapper.append(clone)
+        });
+        $("#note-main").append($wrapper.children())
+    }    
+
+    updateNoteList()
+})
